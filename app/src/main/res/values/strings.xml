@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">POSTPC app2</string>
+    <string name="clear_home">clear home</string>
+    <string name="set_location_as_home">set location as home</string>
+</resources>
