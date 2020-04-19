@@ -2,4 +2,6 @@
     <string name="app_name">POSTPC app2</string>
     <string name="clear_home">clear home</string>
     <string name="set_location_as_home">set location as home</string>
+    <string name="set_sms_phone_number">set SMS phone number</string>
+    <string name="test_sms">test SMS</string>
 </resources>

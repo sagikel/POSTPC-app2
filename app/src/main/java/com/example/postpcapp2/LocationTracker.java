@@ -13,13 +13,13 @@ import com.google.android.gms.location.LocationServices;
 
 public class LocationTracker {
 
-    private MainActivity mainActivity;
+    private Context context;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
 
-    public LocationTracker(final Context context, final MainActivity mainActivity) {
-        this.mainActivity = mainActivity;
+    public LocationTracker(final Context context) {
+        this.context = context;
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
 
         locationRequest = LocationRequest.create();
@@ -40,7 +40,7 @@ public class LocationTracker {
                     intent.putExtra("textViewLat", location.getLatitude());
                     intent.putExtra("textViewLon", location.getLongitude());
                     intent.putExtra("textViewAc", location.getAccuracy());
-                    mainActivity.sendBroadcast(intent);
+                    context.sendBroadcast(intent);
                 }
             }
         };
@@ -52,7 +52,7 @@ public class LocationTracker {
 
         Intent intent = new Intent();
         intent.setAction("LocationTracker.start");
-        mainActivity.sendBroadcast(intent);
+        context.sendBroadcast(intent);
     }
 
     public void stopLocationUpdates() {
@@ -60,6 +60,6 @@ public class LocationTracker {
 
         Intent intent = new Intent();
         intent.setAction("LocationTracker.stop");
-        mainActivity.sendBroadcast(intent);
+        context.sendBroadcast(intent);
     }
 }

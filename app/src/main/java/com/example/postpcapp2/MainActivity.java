@@ -15,9 +15,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -29,6 +32,7 @@ import java.util.Objects;
 public class MainActivity extends AppCompatActivity {
 
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 2;
     LocationTracker locationTracker;
     ImageButton startButton;
     ImageButton stopButton;
@@ -38,14 +42,19 @@ public class MainActivity extends AppCompatActivity {
     TextView textViewLat;
     TextView textViewLon;
     TextView textViewAc;
+    Button buttonSmsSet;
+    Button buttonSmsTest;
 
     SharedPreferences sharedPreferences;
     LocationInfo locationInfo;
     BroadcastReceiver broadcastReceiver;
+    App app;
 
     double lat;
     double lon;
     float ac;
+    String number;
+    boolean tracker = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,11 +69,15 @@ public class MainActivity extends AppCompatActivity {
         textViewLat = findViewById(R.id.textViewLat);
         textViewLon = findViewById(R.id.textViewLon);
         textViewAc = findViewById(R.id.textViewAc);
+        buttonSmsSet = findViewById(R.id.buttonSmsSet);
+        buttonSmsTest = findViewById(R.id.buttonTest);
 
         sharedPreferences = getSharedPreferences("SP", MODE_PRIVATE);
         loudLocation();
+        loudNumber();
+        app = (App) getApplicationContext();
 
-        locationTracker = new LocationTracker(this, this);
+        locationTracker = new LocationTracker(this);
 
         broadcastReceiver = new MyBroadcastReceiver();
         IntentFilter filter = new IntentFilter("LocationTracker.new_location");
@@ -75,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                runTimePermissions();
+                runTimePermissionsLocation();
             }
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
@@ -96,10 +109,21 @@ public class MainActivity extends AppCompatActivity {
                 deleteLocation();
             }
         });
-
+        buttonSmsSet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                runTimePermissionsSMS();
+            }
+        });
+        buttonSmsTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SendTestSMS();
+            }
+        });
     }
 
-    private void runTimePermissions() {
+    private void runTimePermissionsLocation() {
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -147,6 +171,31 @@ public class MainActivity extends AppCompatActivity {
                         .show();
             }
         }
+        if (requestCode == MY_PERMISSIONS_REQUEST_SEND_SMS) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                InsertNumber();
+            }
+            else {
+                new AlertDialog.Builder(this)
+                        .setTitle("SMS Permission")
+                        .setMessage("We need this permission or we can't operate..")
+                        .setIcon(R.drawable.alert_sms)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.SEND_SMS},
+                                        MY_PERMISSIONS_REQUEST_SEND_SMS);
+                            }
+                        })
+                        .setNegativeButton("still NO", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {} })
+                        .create()
+                        .show();
+            }
+        }
     }
 
     private void prepareToTrack() {
@@ -158,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
         // start track
         locationTracker.startLocationUpdates();
+        tracker = true;
     }
 
     private void prepareToStopTrack() {
@@ -170,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
         // stop track
         locationTracker.stopLocationUpdates();
         buttonSet.setVisibility(View.INVISIBLE);
+        tracker = false;
     }
 
     public void setHomeButton(){
@@ -237,9 +288,11 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             switch (Objects.requireNonNull(intent.getAction())){
                 case "LocationTracker.start":
-                    //Toast.makeText(context, "start tracking", Toast.LENGTH_SHORT).show();
+                    // request in ex5
                     break;
                 case "LocationTracker.new_location":
+                    if (!tracker)
+                        break;
                     lat = intent.getDoubleExtra("textViewLat", 0);
                     textViewLat.setText(String.valueOf(lat));
                     lon = intent.getDoubleExtra("textViewLon", 0);
@@ -249,9 +302,91 @@ public class MainActivity extends AppCompatActivity {
                     setHomeButton();
                     break;
                 case "LocationTracker.stop":
-                    //Toast.makeText(context, "stop tracking", Toast.LENGTH_SHORT).show();
+                    // request in ex5
                     break;
             }
         }
+    }
+
+    private void runTimePermissionsSMS() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.SEND_SMS)) {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.SEND_SMS},
+                        MY_PERMISSIONS_REQUEST_SEND_SMS);
+            }
+            else {
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.SEND_SMS},
+                        MY_PERMISSIONS_REQUEST_SEND_SMS);
+            }
+        } else {
+            InsertNumber();
+        }
+    }
+
+    private void InsertNumber() {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+
+        final EditText input = new EditText(this);
+        input.setText(number);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setRawInputType(Configuration.KEYBOARD_12KEY);
+
+        dialog.setTitle("Number for SMS")
+                .setView(input)
+                .setMessage("Enter number, for deletion leave blank")
+                .setIcon(R.drawable.alert_sms)
+                .setPositiveButton("set number", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        number = input.getText().toString();
+                        saveNumber();
+                    }
+                })
+                .setNegativeButton("back", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {} })
+                .create()
+                .show();
+    }
+
+    private void saveNumber() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(number);
+        editor.putString("Number SMS", json);
+        editor.apply();
+
+        if (number.equals("")) {
+            buttonSmsTest.setVisibility(View.INVISIBLE);
+            return;
+        }
+        buttonSmsTest.setVisibility(View.VISIBLE);
+    }
+
+    private void loudNumber() {
+        Gson gson = new Gson();
+        String json = sharedPreferences.getString("Number SMS", null);
+        if (json == null) {
+            number = "";
+            return;
+        }
+        number = gson.fromJson(json, String.class);
+        if (number.equals(""))
+            return;
+        buttonSmsTest.setVisibility(View.VISIBLE);
+    }
+
+    private void SendTestSMS() {
+        Intent intent = new Intent();
+        intent.setAction("POST_PC.ACTION_SEND_SMS");
+        intent.putExtra(app.localSendSmsBroadcastReceiver.PHONE, number);
+        intent.putExtra(app.localSendSmsBroadcastReceiver.CONTENT,
+                "Honey I'm Sending a Test Message!");
+        app.sendBroadcast(intent);
     }
 }

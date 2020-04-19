@@ -75,11 +75,24 @@
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="28dp"
+        android:layout_marginLeft="8dp"
 
-        android:layout_marginBottom="44dp"
+        android:layout_marginBottom="68dp"
         android:text="@string/set_location_as_home"
         android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/buttonSmsSet"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+
+        android:layout_marginBottom="8dp"
+        android:text="@string/set_sms_phone_number"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent" />
 
@@ -88,14 +101,28 @@
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="28dp"
+        android:layout_marginRight="8dp"
 
-        android:layout_marginBottom="44dp"
+        android:layout_marginBottom="68dp"
         android:text="@string/clear_home"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
          />
+
+    <Button
+        android:id="@+id/buttonTest"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+
+        android:layout_marginBottom="8dp"
+        android:text="@string/test_sms"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        />
 
     <TextView
         android:id="@+id/textViewLat"
